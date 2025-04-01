@@ -11,47 +11,91 @@ class CategoryListScreen extends StatelessWidget {
     ThemeData themeData = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title:  Text(AppLocalizations.of(context)!.categories),
+        title: Text(
+          AppLocalizations.of(context)!.categories,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: themeData.primaryColor,
+        elevation: 0,
       ),
       body: Consumer<WordsModel>(
         builder: (context, wordsModel, child) {
           List<String> categories = wordsModel.getCategories();
-          return ListView.separated(
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(
-                  categories[index],
-                  style: TextStyle(fontSize: 21, color:themeData.textSelectionTheme.cursorColor),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryWordsScreen(
-                        category: categories[index],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            separatorBuilder: (BuildContext context, int index) => const Divider(
-              color: Colors.grey,
-            ),
-          );
+          return categories.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No categories yet. Add some words!',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 3 / 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    return _buildCategoryCard(
+                        context, categories[index], themeData);
+                  },
+                );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddWordScreen()),
+            MaterialPageRoute(builder: (context) => const AddWordScreen()),
           );
         },
-        backgroundColor:themeData.primaryColor,
-        child: const Icon(Icons.add),
+        backgroundColor: themeData.primaryColor,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Word'),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(
+      BuildContext context, String category, ThemeData themeData) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CategoryWordsScreen(category: category),
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              colors: [
+                themeData.primaryColor.withOpacity(0.7),
+                themeData.primaryColor,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              category,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       ),
     );
   }

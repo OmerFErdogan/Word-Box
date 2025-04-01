@@ -4,7 +4,8 @@ class FeatureItem extends StatelessWidget {
   final String text;
   final IconData icon;
 
-  const FeatureItem({required this.text, required this.icon});
+  const FeatureItem(
+      {required this.text, required this.icon, required Color color});
 
   @override
   Widget build(BuildContext context) {

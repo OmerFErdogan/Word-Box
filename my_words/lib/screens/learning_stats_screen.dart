@@ -1,129 +1,158 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:my_words/models/words_model.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:my_words/models/words_model.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-class LearningStatsScreen extends StatelessWidget {
+class StatisticsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.learning_statistic,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    return Consumer<WordsModel>(
+      builder: (context, wordsModel, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Statistics'),
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSummaryCard(wordsModel),
+                  const SizedBox(height: 20),
+                  _buildLearningChart(wordsModel),
+                  const SizedBox(height: 20),
+                  _buildCategoryDistribution(wordsModel),
+                  const SizedBox(height: 20),
+                  _buildAchievements(wordsModel),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSummaryCard(WordsModel model) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Summary',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Text('Total Words: ${model.words.length}'),
+            Text('Favorite Words: ${model.favoriteWords.length}'),
+            Text('Current Streak: ${model.currentStreak} days'),
+            Text('Current Level: ${model.currentLevel}'),
+            Text('Current EXP: ${model.currentExp}'),
+          ],
         ),
-        backgroundColor: Colors.purple,
-      ),
-      body: FutureBuilder(
-        future: Provider.of<WordsModel>(context, listen: false).init(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.connectionState == ConnectionState.done) {
-            return Consumer<WordsModel>(
-              builder: (context, wordsModel, child) {
-                if (wordsModel.learningStats.isEmpty) {
-                  return const Center(
-                      child: Text('Henüz istatistik verisi bulunmuyor.'));
-                } else {
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                         Text(
-                          AppLocalizations.of(context)!.words_learned_over_time,
-                          style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: _buildLearningStatsChart(
-                              wordsModel.learningStats),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-            );
-          } else {
-            return const Center(child: Text('Bir hata oluştu.'));
-          }
-        },
       ),
     );
   }
 
-  Widget _buildLearningStatsChart(Map<DateTime, int> learningStats) {
-    final sortedKeys = learningStats.keys.toList()..sort();
-        final List<FlSpot> data = [];
+  Widget _buildLearningChart(WordsModel model) {
+    List<FlSpot> spots = [];
+    model.learningStats.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key))
+      ..forEach((entry) {
+        spots.add(FlSpot(entry.key.millisecondsSinceEpoch.toDouble(),
+            entry.value.toDouble()));
+      });
 
-    for (int i = 0; i < sortedKeys.length; i++) {
-      final date = sortedKeys[i];
-      final count = learningStats[date];
-      data.add(FlSpot(i.toDouble(), count!.toDouble()));
-    }
-
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: (sortedKeys.length - 1).toDouble(),
-        minY: 0,
-        maxY: (learningStats.values.toList()..sort()).last.toDouble() + 1,
-        lineBarsData: [
-          LineChartBarData(
-            spots: data,
-            isCurved: true,
-            barWidth: 3,
-            colors: [Colors.purple],
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                color: Colors.purple,
-                radius: 4,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Learning Progress',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Container(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  gridData: const FlGridData(show: false),
+                  titlesData: const FlTitlesData(show: false),
+                  borderData: FlBorderData(show: true),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: Colors.blue,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-        titlesData: FlTitlesData(
-          leftTitles: SideTitles(
-            showTitles: true,
-            getTextStyles: (contex, value) => const TextStyle(
-              color: Colors.black,
-              fontSize: 12,
-            ),
-          ),
-          bottomTitles: SideTitles(
-            showTitles: true,
-            getTextStyles: (contex, value) => const TextStyle(
-              color: Colors.black,
-              fontSize: 12,
-            ),
-            getTitles: (double value) {
-              final int index = value.toInt();
-              if (index >= 0 && index < sortedKeys.length) {
-                final date = sortedKeys[index];
-                return '${date.day}.${date.month}.${date.year}';
-              } else {
-                return '';
-              }
-            },
-          ),
+          ],
         ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.withOpacity(0.2),
-              strokeWidth: 1,
-            );
-          },
+      ),
+    );
+  }
+
+  Widget _buildCategoryDistribution(WordsModel model) {
+    Map<String, int> categoryCount = {};
+    for (var word in model.words) {
+      for (var category in word.categories) {
+        categoryCount[category] = (categoryCount[category] ?? 0) + 1;
+      }
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Category Distribution',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            ...categoryCount.entries
+                .map((entry) => Text('${entry.key}: ${entry.value} words'))
+                .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAchievements(WordsModel model) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Achievements',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            // Bu kısmı, mevcut başarımlarınıza göre düzenleyin
+            ListTile(
+              leading: Icon(Icons.emoji_events,
+                  color:
+                      model.words.length >= 10 ? Colors.yellow : Colors.grey),
+              title: const Text('Beginner'),
+              subtitle: const Text('Save 10 words'),
+            ),
+            ListTile(
+              leading: Icon(Icons.emoji_events,
+                  color:
+                      model.words.length >= 50 ? Colors.yellow : Colors.grey),
+              title: const Text('Intermediate'),
+              subtitle: const Text('Save 50 words'),
+            ),
+            // Daha fazla başarım ekleyebilirsiniz
+          ],
         ),
       ),
     );
   }
 }
-

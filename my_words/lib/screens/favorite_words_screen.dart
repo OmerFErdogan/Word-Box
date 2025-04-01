@@ -11,7 +11,8 @@ class FavoriteWordsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)!.favorite_words,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: themeData.primaryColor,
       ),
@@ -23,14 +24,18 @@ class FavoriteWordsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final word = favoriteWords[index];
               return ListTile(
-              //  tileColor: index % 2 == 0 ? Colors.purple.shade50 : Colors.white,
+                //  tileColor: index % 2 == 0 ? Colors.purple.shade50 : Colors.white,
                 title: Text(
-                  '${word.english.toUpperCase()} - ${word.turkish.toUpperCase()}',
-                  style:  TextStyle(fontWeight: FontWeight.bold, color: themeData.textSelectionTheme.cursorColor),
+                  '${word.english.toUpperCase()} - ${word.turkish.first.toUpperCase()}',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: themeData.textSelectionTheme.cursorColor),
                 ),
                 subtitle: Text(
                   word.example,
-                  style: TextStyle(fontWeight: FontWeight.normal, color: themeData.textSelectionTheme.cursorColor),
+                  style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      color: themeData.textSelectionTheme.cursorColor),
                 ),
               );
             },

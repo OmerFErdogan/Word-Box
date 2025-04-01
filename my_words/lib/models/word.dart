@@ -1,11 +1,15 @@
+import 'image.dart';
+
 class Word {
   final int id;
   final String english;
-  final String turkish;
+  List<String> turkish;
   final String example;
   final DateTime createdAt;
   bool isFavorite;
-  final String category;
+  List<String> categories;
+  CustomImage? image;
+  String? definition; // Burayı String? olarak değiştirin
 
   Word({
     required this.id,
@@ -14,17 +18,23 @@ class Word {
     required this.example,
     required this.createdAt,
     this.isFavorite = false,
-    required this.category,
+    required this.categories,
+    this.image,
+    this.definition, // Burada required kaldırıldı
   });
 
+  // fromJson ve toJson metodlarını da güncellemeyi unutmayın
   factory Word.fromJson(Map<String, dynamic> json) {
     return Word(
       id: json['id'],
       english: json['english'],
-      turkish: json['turkish'],
+      turkish: List<String>.from(json['turkish']),
       example: json['example'],
       createdAt: DateTime.parse(json['createdAt']),
-      category: json['category'] == null || json['category'].isEmpty ? "Kategorisiz" : json['category'],
+      isFavorite: json['isFavorite'] ?? false,
+      categories: List<String>.from(json['categories'] ?? ['General']),
+      image: json['image'] == null ? null : CustomImage.fromJson(json['image']),
+      definition: json['definition'], // Burada as String? kaldırıldı
     );
   }
 
@@ -35,7 +45,10 @@ class Word {
       'turkish': turkish,
       'example': example,
       'createdAt': createdAt.toIso8601String(),
-      'category': category,
+      'isFavorite': isFavorite,
+      'categories': categories,
+      'image': image?.toJson(),
+      'definition': definition,
     };
   }
 }
